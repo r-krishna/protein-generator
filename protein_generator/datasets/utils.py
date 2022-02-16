@@ -174,6 +174,13 @@ aa2graph = {
     },
 }
 
+def sp3atom(atomname):
+    atom = Atom(atomname)
+    atom.SetHybridization("SP3")
+    atom.SetIsAromatic(False)
+    atom.SetIsInRing(False)
+    return atom
+
 def protein_atomname_to_atomobj(atomname, restype):
     """
     Converts protein atoms into Atom objects with hybridization, aromatic and ring features
@@ -357,3 +364,12 @@ class Bond:
 
     def GetBondType(self):
         return self.bondtype
+
+
+peptide_btypes = [
+    Bond("Single", False),
+    Bond("Single", True),
+    Bond("Double", False),
+    Bond("Double", True),
+    Bond("Aromatic", True),
+]

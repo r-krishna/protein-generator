@@ -1,6 +1,8 @@
 """
 This file contains methods that take atom and bond objects and calculate different features from them
 """
+import numpy as np
+
 from protein_generator.datasets.utils import ATOMTYPES, BONDTYPES
 
 def one_hot_encode_unk(x, Xs):
@@ -14,13 +16,13 @@ def one_hot_encode_unk(x, Xs):
 	Returns:
 		List: a list of length len(Xs) + 1 that is a one hot encoding of the features in Xs
 	"""
-    ret = np.zeros(len(Xs) + 1)
-    if x not in Xs:
-        ret[-1] = 1.0
-    else:
-        ndx = Xs.index(x)
-        ret[ndx] = 1.0
-    return list(ret)
+	ret = np.zeros(len(Xs) + 1)
+	if x not in Xs:
+		ret[-1] = 1.0
+	else:
+		ndx = Xs.index(x)
+		ret[ndx] = 1.0
+	return list(ret)
 
 
 def get_atom_types(atoms):
