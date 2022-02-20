@@ -1,4 +1,8 @@
+import os
+from datetime import datetime
+
 import torch
+import wandb
 from torch.optim import RMSprop
 from torch.data import DataLoader
 
@@ -43,6 +47,8 @@ def generator_train_loop(generator, critic, noise_data_loader, G_optimizer):
 
 
 if __name__ == "main":
+    wandb.init(project="protein-generator", entity="rkrishna3")
+
     # Set up datasets
     pdb_dir = None
     real_data = ProteinChainDataset("data/pdbbind_list.txt", pdb_dir)
@@ -72,13 +78,48 @@ if __name__ == "main":
     G_optimizer = RMSprop(generator.parameters(), lr=5e-5)
     C_optimizer = RMSprop(critic.parameters(), lr=5e-5)
 
+    # Set up checkpoint saving path
+    date = datetime.now().strftime("%Y_%m_%d")
+    checkpoint_path = f"trained_models/{date}"
+
+    # Log hyperparameters on wandb
+
+    wandb.config = {
+        "G_learning_rate": 5e-5,
+        "C_learning_rate": 5e-5,
+        "epochs": 100,
+        "batch_size": 4
+    }
+
     # training loop
     num_epochs = 100
-    for i in range(num_epochs):
-        
+    for epoch in range(num_epochs):
+        wandb.watch(critic)
+        wandb.watch(generator)
         # train the discriminator more that the generator
         for _ in range(5):
             critic_loss = critic_train_loop(generator, critic, real_data_loader, noise_data_loader, C_optimizer)
         
+        wandb.log({"critic_loss": critic_loss})
+
+        torch.save(
+            {
+                "epoch": epoch,
+                "model_state_dict": critic.state_dict(),
+                "optimizer_state_dict": C_optimizer.state_dict(),
+                "loss": critic_loss 
+            }, os.path.join(checkpoint_path, f"critic_{epoch}.pt")
+        )
+        
         # train the generator
         generator_loss = generator_train_loop(generator, critic, noise_data_loader, G_optimizer)
+        torch.save(
+            {
+                "epoch": epoch,
+                "model_state_dict": generator.state_dict(),
+                "optimizer_state_dict": G_optimizer.state_dict(),
+                "loss": generator_loss 
+            }, os.path.join(checkpoint_path, f"generator_{epoch}.pt")
+        )
+        
+        wandb.log({"generator_loss": generator_loss})
